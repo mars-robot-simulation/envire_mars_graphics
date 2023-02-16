@@ -1,0 +1,15 @@
+<package>
+    <description brief="envire_mars_graphics">
+      Visualization of envire types via mars_graphics.
+    </description>
+	<maintainer>Malte Langosz/malte.langosz@dfki.de</maintainer>
+    <!--depend package="base/types" /-->
+    <depend package="simulation/lib_manager" />
+    <depend package="simulation/mars2/mars_interfaces" />
+    <depend package="simulation/mars/common/cfg_manager" />
+    <depend package="simulation/mars/graphics" />
+    <depend package="tools/configmaps" />
+    <depend package="envire/envire_core" />
+    <depend package="envire/envire_smurf" />
+    <tags>needs_opt</tags>
+</package>
