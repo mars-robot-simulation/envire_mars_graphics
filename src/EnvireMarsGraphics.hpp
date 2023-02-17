@@ -69,6 +69,7 @@ namespace mars
             std::map<unsigned long, envire::core::FrameId> visualMap, visualFrameMap;
             std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
+            bool showGui, showCollisions, showAnchor;
         };
 
     } // end of namespace envire_ode_physics_viz

@@ -43,6 +43,9 @@ namespace mars
         EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager) :
             lib_manager::LibInterface(theManager)
         {
+            showGui = true;
+            showCollisions = false;
+            showAnchor = false;
             graphics = libManager->getLibraryAs<GraphicsManagerInterface>("mars_graphics");
             if(graphics)
             {
@@ -54,6 +57,9 @@ namespace mars
             {
                 cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.",
                                                      (int)1, this);
+                showGui = cfgVisRep.iValue & 1;
+                showCollisions = cfgVisRep.iValue & 2;
+                showAnchor = cfgVisRep.iValue & 4;
             }
 
             // todo: parse the graph and search for frames, etc.
@@ -80,24 +86,32 @@ namespace mars
 
         void EnvireMarsGraphics::preGraphicsUpdate(void)
         {
-            for(auto &it: visualMap)
+            if(showGui)
             {
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
-                graphics->setDrawObjectPos(it.first, t.transform.translation);
-                graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                for(auto &it: visualMap)
+                {
+                    envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
+                    graphics->setDrawObjectPos(it.first, t.transform.translation);
+                    graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                }
             }
+            // todo: check if frames have to be updated
+            // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
             for(auto &it: visualFrameMap)
             {
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
                 graphics->setDrawObjectPos(it.first, t.transform.translation);
                 graphics->setDrawObjectRot(it.first, t.transform.orientation);
             }
-            for(auto &it: visualAnchorMap)
+            if(showAnchor)
             {
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second.first);
-                Vector p = t.transform.translation+t.transform.orientation*it.second.second.translation();
-                graphics->setDrawObjectPos(it.first, p);
-                //control->graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                for(auto &it: visualAnchorMap)
+                {
+                    envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second.first);
+                    Vector p = t.transform.translation+t.transform.orientation*it.second.second.translation();
+                    graphics->setDrawObjectPos(it.first, p);
+                    //control->graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                }
             }
         }
 
@@ -107,16 +121,16 @@ namespace mars
             {
                 if(graphics)
                 {
-                    bool gui = _property.iValue & 1;
-                    bool collision = _property.iValue & 2;
-                    bool anchor = _property.iValue & 4;
+                    showGui = _property.iValue & 1;
+                    showCollisions = _property.iValue & 2;
+                    showAnchor = _property.iValue & 4;
                     for(auto &it: visualMap)
                     {
-                        graphics->setDrawObjectShow(it.first, gui);
+                        graphics->setDrawObjectShow(it.first, showGui);
                     }
                     for(auto &it: visualAnchorMap)
                     {
-                        graphics->setDrawObjectShow(it.first, anchor);
+                        graphics->setDrawObjectShow(it.first, showAnchor);
                     }
                 }
                 return;
@@ -178,7 +192,7 @@ namespace mars
                 interfaces::NodeData nodeData;
                 nodeData.fromConfigMap(&config, "");
                 nodeData.material.fromConfigMap(&material, "");
-                unsigned long drawID = graphics->addDrawObject(nodeData, 0);
+                unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
                 graphics->setDrawObjectPos(drawID, p);
                 graphics->setDrawObjectRot(drawID, t.transform.orientation);
                 visualAnchorMap[drawID] = std::make_pair(e.frame, transform);
@@ -279,7 +293,7 @@ namespace mars
                     material["ambientColor"]["g"] = 0.59;
                     material["ambientColor"]["b"] = 0.5;
                 }
-                drawID = graphics->addDrawObject(nodeData, 1);
+                drawID = graphics->addDrawObject(nodeData, showGui);
                 visualMap[drawID] = e.frame;
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 utils::Vector p = t.transform.translation;
