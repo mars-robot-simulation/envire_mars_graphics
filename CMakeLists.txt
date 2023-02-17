@@ -1,7 +1,5 @@
-project(envire_mars_graphics)
-set(PROJECT_VERSION 1.0)
-set(PROJECT_DESCRIPTION "Visualization of envire types via mars_graphics.")
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
+project(envire_mars_graphics VERSION 1.0.0 DESCRIPTION "Visualization of envire types via mars_graphics.")
 
 find_package(Rock)
 
@@ -24,14 +22,6 @@ MACRO(CMAKE_USE_FULL_RPATH install_rpath)
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 ENDMACRO(CMAKE_USE_FULL_RPATH)
 CMAKE_USE_FULL_RPATH("${CMAKE_INSTALL_PREFIX}/lib")
-
-#find_package(Doxygen)
-#if(DOXYGEN_FOUND)
-#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-#add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMENT "Generating API documentation with Doxygen" VERBATIM)
-#endif(DOXYGEN_FOUND)
-
-#rock_find_cmake(Boost)
 
 #Get linker and compiler flags from pkg-config
 pkg_check_modules(PKGCONFIG REQUIRED
@@ -112,3 +102,11 @@ install(FILES ${SOURCES_H} DESTINATION include/${PROJECT_NAME})
 
 configure_file(${PROJECT_NAME}.pc.in ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
+
+# documentation
+configure_file(${CMAKE_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_BINARY_DIR}/doc/Doxyfile @ONLY)
+add_custom_target(doc
+  COMMAND doxygen ${CMAKE_BINARY_DIR}/doc/Doxyfile
+)
+
+
