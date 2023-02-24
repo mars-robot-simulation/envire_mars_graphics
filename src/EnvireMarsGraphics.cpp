@@ -46,9 +46,9 @@ namespace mars
             showGui = true;
             showCollisions = false;
             showAnchor = false;
-            avgVizTime = 0;
-            avgFrameTime = 0;
-            avgAnchorTime = 0;
+            vizTime = avgVizTime = 0;
+            frameTime = avgFrameTime = 0;
+            anchorTime = avgAnchorTime = 0;
             avgTimeCount = 0;
 
             dataBroker = libManager->getLibraryAs<data_broker::DataBrokerInterface>("data_broker");
