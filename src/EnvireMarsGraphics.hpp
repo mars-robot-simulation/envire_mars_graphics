@@ -16,6 +16,11 @@
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
 #include <mars_interfaces/graphics/GraphicsManagerInterface.h>
+#include <mars_interfaces/sim/DynamicObject.hpp>
+
+#include <mars/data_broker/ProducerInterface.h>
+#include <mars/data_broker/DataBrokerInterface.h>
+#include <mars/data_broker/DataPackageMapping.h>
 
 #include <mars_ode_collision/objects/Object.hpp>
 
@@ -26,13 +31,22 @@ namespace mars
     namespace envire_mars_graphics
     {
 
+        class TmpMap
+        {
+        public:
+            envire::core::FrameId frame;
+            smurf::Visual *visual;
+            interfaces::DynamicObjectItem *dynamicObject;
+        };
+
         class EnvireMarsGraphics : public lib_manager::LibInterface,
-                                    public interfaces::GraphicsUpdateInterface,
-                                    public cfg_manager::CFGClient,
-                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
-                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
+                                   public interfaces::GraphicsUpdateInterface,
+                                   public cfg_manager::CFGClient,
+                                   public data_broker::ProducerInterface,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>,
-                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>
         {
 
         public:
@@ -57,6 +71,11 @@ namespace mars
 
             virtual void cfgUpdateProperty(cfg_manager::cfgPropertyStruct _property) override;
 
+            // ## DataBroker callbacks ##
+            virtual void produceData(const data_broker::DataInfo &info,
+                                     data_broker::DataPackage *package,
+                                     int callbackParam) override;
+
             // envire callbacks
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e) override;
@@ -64,12 +83,16 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Visual>>& e) override;
 
         private:
+            data_broker::DataBrokerInterface *dataBroker;
             interfaces::GraphicsManagerInterface *graphics;
             cfg_manager::CFGManagerInterface *cfg;
-            std::map<unsigned long, envire::core::FrameId> visualMap, visualFrameMap;
+            data_broker::DataPackageMapping dbPackageMapping;
+            std::map<unsigned long, TmpMap> visualMap, visualFrameMap;
             std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
             bool showGui, showCollisions, showAnchor;
+            double vizTime, avgVizTime, frameTime, avgFrameTime, anchorTime, avgAnchorTime;
+            int avgTimeCount;
         };
 
     } // end of namespace envire_ode_physics_viz

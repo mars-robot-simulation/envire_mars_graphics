@@ -46,6 +46,30 @@ namespace mars
             showGui = true;
             showCollisions = false;
             showAnchor = false;
+            avgVizTime = 0;
+            avgFrameTime = 0;
+            avgAnchorTime = 0;
+            avgTimeCount = 0;
+
+            dataBroker = libManager->getLibraryAs<data_broker::DataBrokerInterface>("data_broker");
+            dbPackageMapping.add("vizTime", &avgVizTime);
+            dbPackageMapping.add("frameTime", &avgFrameTime);
+            dbPackageMapping.add("anchorTime", &avgAnchorTime);
+            if(dataBroker)
+            {
+                std::string groupName, dataName;
+                groupName = "EnvireMarsGraphcis";
+                dataName = "debugTime";
+                // initialize the dataBroker Package
+                data_broker::DataPackage dbPackage;
+                dbPackageMapping.writePackage(&dbPackage);
+                dataBroker->pushData(groupName, dataName, dbPackage, NULL,
+                                     data_broker::DATA_PACKAGE_READ_FLAG);
+                // register as producer
+                dataBroker->registerTimedProducer(this, groupName, dataName,
+                                                  "_REALTIME_", 100);
+            }
+
             graphics = libManager->getLibraryAs<GraphicsManagerInterface>("mars_graphics");
             if(graphics)
             {
@@ -81,27 +105,64 @@ namespace mars
             {
                 libManager->releaseLibrary("cfg_manager");
             }
+            if(dataBroker)
+            {
+                std::string groupName, dataName;
+                groupName = "EnvireMarsGraphics";
+                dataName = "debugTime";
+                dataBroker->unregisterTimedProducer(this, groupName, dataName,
+                                                    "_REALTIME_");
+                libManager->releaseLibrary("data_broker");
+            }
         }
 
 
         void EnvireMarsGraphics::preGraphicsUpdate(void)
         {
+            long myTime;
+            long timeDiff;
+            if(dataBroker)
+            {
+                myTime = utils::getTime();
+            }
             if(showGui)
             {
                 for(auto &it: visualMap)
                 {
-                    envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
-                    graphics->setDrawObjectPos(it.first, t.transform.translation);
-                    graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                    //envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
+                    //graphics->setDrawObjectPos(it.first, t.transform.translation);
+                    //graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                    if(it.second.visual)
+                    {
+                        graphics->setDrawObjectPos(it.first, it.second.visual->origin.position);
+                        graphics->setDrawObjectRot(it.first, it.second.visual->origin.orientation);
+                    }
                 }
+            }
+            if(dataBroker)
+            {
+                timeDiff = getTimeDiff(myTime);
+                myTime += timeDiff;
+                vizTime += timeDiff;
             }
             // todo: check if frames have to be updated
             // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
             for(auto &it: visualFrameMap)
             {
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
-                graphics->setDrawObjectPos(it.first, t.transform.translation);
-                graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                //envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
+                //graphics->setDrawObjectPos(it.first, t.transform.translation);
+                //graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                if(it.second.dynamicObject)
+                {
+                    graphics->setDrawObjectPos(it.first, it.second.dynamicObject->absPosition);
+                    graphics->setDrawObjectRot(it.first, it.second.dynamicObject->absQ);
+                }
+            }
+            if(dataBroker)
+            {
+                timeDiff = getTimeDiff(myTime);
+                myTime += timeDiff;
+                frameTime += timeDiff;
             }
             if(showAnchor)
             {
@@ -112,6 +173,22 @@ namespace mars
                     graphics->setDrawObjectPos(it.first, p);
                     //control->graphics->setDrawObjectRot(it.first, t.transform.orientation);
                 }
+            }
+            if(dataBroker)
+            {
+                timeDiff = getTimeDiff(myTime);
+                myTime += timeDiff;
+                anchorTime += timeDiff;
+            }
+            if(++avgTimeCount == 100)
+            {
+                avgVizTime = vizTime/avgTimeCount;
+                avgFrameTime = frameTime/avgTimeCount;
+                avgAnchorTime = anchorTime/avgTimeCount;
+                avgTimeCount = 0;
+                vizTime = 0;
+                frameTime = 0;
+                anchorTime = 0;
             }
         }
 
@@ -154,7 +231,21 @@ namespace mars
                 unsigned long drawID = graphics->addDrawObject(nodeData, 0);
                 graphics->setDrawObjectPos(drawID, t.transform.translation);
                 graphics->setDrawObjectRot(drawID, t.transform.orientation);
-                visualFrameMap[drawID] = e.frame;
+                DynamicObjectItem *objectItem = NULL;
+                try
+                {
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<DynamicObjectItem>> it = ControlCenter::envireGraph->getItem<envire::core::Item<DynamicObjectItem>>(e.frame);
+                    objectItem = &(it->getData());
+                }
+                catch (...)
+                {
+                    objectItem = NULL;
+                }
+                TmpMap tmpMap;
+                tmpMap.frame = e.frame;
+                tmpMap.visual = NULL;
+                tmpMap.dynamicObject = objectItem;
+                visualFrameMap[drawID] = tmpMap;
             }
         }
 
@@ -294,13 +385,24 @@ namespace mars
                     material["ambientColor"]["b"] = 0.5;
                 }
                 drawID = graphics->addDrawObject(nodeData, showGui);
-                visualMap[drawID] = e.frame;
+                TmpMap tmpMap;
+                tmpMap.frame = e.frame;
+                tmpMap.visual = &visual;
+                tmpMap.dynamicObject = NULL;
+                visualMap[drawID] = tmpMap;
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 utils::Vector p = t.transform.translation;
                 utils::Quaternion q = t.transform.orientation;
                 graphics->setDrawObjectPos(drawID, p);
                 graphics->setDrawObjectRot(drawID, q);
             }
+        }
+
+        void EnvireMarsGraphics::produceData(const data_broker::DataInfo &info,
+                                             data_broker::DataPackage *dbPackage,
+                                             int callbackParam)
+        {
+            dbPackageMapping.writePackage(dbPackage);
         }
 
     } // end of namespace envire_mars_graphics

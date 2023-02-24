@@ -33,6 +33,7 @@ pkg_check_modules(PKGCONFIG REQUIRED
           configmaps
           envire_core
           envire_smurf
+          data_broker
 )
 
 include_directories(${PKGCONFIG_INCLUDE_DIRS})
