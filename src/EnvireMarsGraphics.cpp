@@ -93,8 +93,11 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>::subscribe(ControlCenter::envireGraph.get());
         }
-        
+
         EnvireMarsGraphics::~EnvireMarsGraphics()
         {
             if(graphics)
@@ -213,7 +216,7 @@ namespace mars
                 return;
             }
         }
-        
+
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e)
         {
             envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
@@ -249,7 +252,46 @@ namespace mars
             }
         }
 
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
+        {
+            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            if(graphics)
+            {
+                // crate empty object to be able to use the frame debug option of mars_graphics
+                ConfigMap config;
+                config["origname"] = "empty";
+                config["filename"] = "PRIMITIVE";
+                config["name"] = e.frame;
+                config["type"] = "empty";
+                config["createFrame"] = true;
+                interfaces::NodeData nodeData;
+                nodeData.fromConfigMap(&config, "");
+                unsigned long drawID = graphics->addDrawObject(nodeData, 0);
+                graphics->setDrawObjectPos(drawID, t.transform.translation);
+                graphics->setDrawObjectRot(drawID, t.transform.orientation);
+                DynamicObjectItem *objectItem = NULL;
+                try
+                {
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<DynamicObjectItem>> it = ControlCenter::envireGraph->getItem<envire::core::Item<DynamicObjectItem>>(e.frame);
+                    objectItem = &(it->getData());
+                }
+                catch (...)
+                {
+                    objectItem = NULL;
+                }
+                TmpMap tmpMap;
+                tmpMap.frame = e.frame;
+                tmpMap.visual = NULL;
+                tmpMap.dynamicObject = objectItem;
+                visualFrameMap[drawID] = tmpMap;
+            }
+        }
+
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e)
+        {
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e)
         {
         }
 
@@ -289,7 +331,7 @@ namespace mars
                 visualAnchorMap[drawID] = std::make_pair(e.frame, transform);
             }
         }
-        
+
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Visual>>& e)
         {
             // create node data from smurf::Visual
@@ -396,6 +438,72 @@ namespace mars
                 graphics->setDrawObjectPos(drawID, p);
                 graphics->setDrawObjectRot(drawID, q);
             }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e)
+        {
+            // create node data from smurf::Visual
+            // store the item with draw id in map
+            if(!graphics)
+            {
+                return;
+            }
+            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
+            unsigned long drawID;
+
+            bool create = false;
+            envire::base_types::geometry::Box& geometry = e.item->getData();
+            ConfigMap node = geometry.getFullConfigMap();
+
+            node["origname"] = node["type"];
+            node["filename"] = "PRIMITIVE";
+            node["extend"]["x"] = node["size"]["x"];
+            node["extend"]["y"] = node["size"]["y"];
+            node["extend"]["z"] = node["size"]["z"];
+            create = true;
+
+            // TODO: we do this since we use everywhere NodeData
+            // we should get rid of NodeData and use ConfigMap
+            if(create)
+            {
+
+            }
+        }
+
+        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &node) {
+            interfaces::NodeData nodeData;
+            nodeData.fromConfigMap(&node, "");
+            // TODO: do we want to set default material in smurf if we dont have one
+            ConfigMap material;
+            if (visual.material != nullptr) {
+                material = visual.material->getConfigMap();
+                nodeData.material.fromConfigMap(&material, "");
+            } else {
+                material["name"] = "visual";
+                material["diffuseColor"]["a"] = 1.0;
+                material["diffuseColor"]["r"] = 0.7;
+                material["diffuseColor"]["g"] = 0.39;
+                material["diffuseColor"]["b"] = 0.3;
+                material["specularColor"]["a"] = 1.0;
+                material["specularColor"]["r"] = 0.0;
+                material["specularColor"]["g"] = 0.0;
+                material["specularColor"]["b"] = 0.0;
+                material["ambientColor"]["a"] = 1.0;
+                material["ambientColor"]["r"] = 0.7;
+                material["ambientColor"]["g"] = 0.59;
+                material["ambientColor"]["b"] = 0.5;
+            }
+            drawID = graphics->addDrawObject(nodeData, showGui);
+            TmpMap tmpMap;
+            tmpMap.frame = e.frame;
+            tmpMap.visual = &visual;
+            tmpMap.dynamicObject = NULL;
+            visualMap[drawID] = tmpMap;
+            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            utils::Vector p = t.transform.translation;
+            utils::Quaternion q = t.transform.orientation;
+            graphics->setDrawObjectPos(drawID, p);
+            graphics->setDrawObjectRot(drawID, q);
         }
 
         void EnvireMarsGraphics::produceData(const data_broker::DataInfo &info,

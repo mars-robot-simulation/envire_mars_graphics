@@ -26,6 +26,10 @@
 
 #include <iostream>
 
+#include <envire_base_types/Link.hpp>
+#include <envire_base_types/Inertial.hpp>
+#include <envire_base_types/geometry/Box.hpp>
+
 namespace mars
 {
     namespace envire_mars_graphics
@@ -46,7 +50,10 @@ namespace mars
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>
         {
 
         public:
@@ -81,6 +88,11 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Visual>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e) override;
+
+            void createVisual(configmaps::ConfigMap &node);
 
         private:
             data_broker::DataBrokerInterface *dataBroker;
