@@ -29,6 +29,7 @@
 #include <envire_base_types/Link.hpp>
 #include <envire_base_types/Inertial.hpp>
 #include <envire_base_types/geometry/Box.hpp>
+#include <mars_interfaces/sim/AbsolutePose.hpp>
 
 namespace mars
 {
@@ -99,8 +100,10 @@ namespace mars
             interfaces::GraphicsManagerInterface *graphics;
             cfg_manager::CFGManagerInterface *cfg;
             data_broker::DataPackageMapping dbPackageMapping;
-            std::map<unsigned long, TmpMap> visualMap, visualFrameMap;
-            std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
+            //std::map<unsigned long, TmpMap> visualFrameMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, frameMap;
+            std::map<unsigned long, std::pair<interfaces::AbsolutePose*, Eigen::Affine3d>> anchorMap;
+            //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
             bool showGui, showCollisions, showAnchor;
             double vizTime, avgVizTime, frameTime, avgFrameTime, anchorTime, avgAnchorTime;

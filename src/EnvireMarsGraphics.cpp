@@ -79,6 +79,7 @@ namespace mars
             cfg = libManager->getLibraryAs<cfg_manager::CFGManagerInterface>("cfg_manager");
             if(cfg)
             {
+                // TODO: add frame visualisation showFrames into the menu
                 cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.",
                                                      (int)1, this);
                 showGui = cfgVisRep.iValue & 1;
@@ -132,13 +133,10 @@ namespace mars
             {
                 for(auto &it: visualMap)
                 {
-                    //envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
-                    //graphics->setDrawObjectPos(it.first, t.transform.translation);
-                    //graphics->setDrawObjectRot(it.first, t.transform.orientation);
-                    if(it.second.visual)
+                    if (it.second)
                     {
-                        graphics->setDrawObjectPos(it.first, it.second.visual->origin.position);
-                        graphics->setDrawObjectRot(it.first, it.second.visual->origin.orientation);
+                        graphics->setDrawObjectPos(it.first, it.second->position);
+                        graphics->setDrawObjectRot(it.first, it.second->rotation);
                     }
                 }
             }
@@ -150,15 +148,13 @@ namespace mars
             }
             // todo: check if frames have to be updated
             // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
-            for(auto &it: visualFrameMap)
+            // TODO: add menu showFrame
+            for (auto &it : frameMap)
             {
-                //envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second);
-                //graphics->setDrawObjectPos(it.first, t.transform.translation);
-                //graphics->setDrawObjectRot(it.first, t.transform.orientation);
-                if(it.second.dynamicObject)
+                if (it.second)
                 {
-                    graphics->setDrawObjectPos(it.first, it.second.dynamicObject->absPosition);
-                    graphics->setDrawObjectRot(it.first, it.second.dynamicObject->absQ);
+                    graphics->setDrawObjectPos(it.first, it.second->position);
+                    graphics->setDrawObjectRot(it.first, it.second->rotation);
                 }
             }
             if(dataBroker)
@@ -169,12 +165,13 @@ namespace mars
             }
             if(showAnchor)
             {
-                for(auto &it: visualAnchorMap)
+                for(auto &it: anchorMap)
                 {
-                    envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, it.second.first);
-                    Vector p = t.transform.translation+t.transform.orientation*it.second.second.translation();
-                    graphics->setDrawObjectPos(it.first, p);
-                    //control->graphics->setDrawObjectRot(it.first, t.transform.orientation);
+                    if (it.second.first)
+                    {
+                        utils::Vector p = it.second.first->position+it.second.first->rotation*it.second.second.translation();
+                        graphics->setDrawObjectPos(it.first, p);
+                    }
                 }
             }
             if(dataBroker)
@@ -208,7 +205,7 @@ namespace mars
                     {
                         graphics->setDrawObjectShow(it.first, showGui);
                     }
-                    for(auto &it: visualAnchorMap)
+                    for(auto &it: anchorMap)
                     {
                         graphics->setDrawObjectShow(it.first, showAnchor);
                     }
@@ -244,11 +241,17 @@ namespace mars
                 {
                     objectItem = NULL;
                 }
-                TmpMap tmpMap;
-                tmpMap.frame = e.frame;
-                tmpMap.visual = NULL;
-                tmpMap.dynamicObject = objectItem;
-                visualFrameMap[drawID] = tmpMap;
+
+                // the AbsolutePose is added by creating a new frame in the graph,
+                // so the AbsolutePose Item already exists when a new visual item is added into the graph
+                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
+                {
+                    // CAUTION: we assume that there is only one AbsolutePose in the frame
+                    // so we get the first item
+                    // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    frameMap[drawID] = &(it->getData());
+                }
             }
         }
 
@@ -302,6 +305,7 @@ namespace mars
                 urdf::JointSharedPtr joint = e.item->getData().getJointModel();
 
                 // deprecated: config["anchorpos"] = "node2"; // always use the child_link as the anchor since joint and child_link are in the same frame
+
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 Vector p = t.transform.translation;
                 const Eigen::Affine3d &transform = e.item->getData().getParentToJointOrigin();
@@ -328,7 +332,18 @@ namespace mars
                 unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
                 graphics->setDrawObjectPos(drawID, p);
                 graphics->setDrawObjectRot(drawID, t.transform.orientation);
-                visualAnchorMap[drawID] = std::make_pair(e.frame, transform);
+
+                // the AbsolutePose is added by creating a new frame in the graph,
+                // so the AbsolutePose Item already exists when a new visual item is added into the graph
+                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
+                {
+                    // CAUTION: we assume that there is only one AbsolutePose in the frame
+                    // so we get the first item
+                    // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    anchorMap[drawID] = std::make_pair(&(it->getData()), transform);
+                }
+
             }
         }
 
@@ -427,11 +442,19 @@ namespace mars
                     material["ambientColor"]["b"] = 0.5;
                 }
                 drawID = graphics->addDrawObject(nodeData, showGui);
-                TmpMap tmpMap;
-                tmpMap.frame = e.frame;
-                tmpMap.visual = &visual;
-                tmpMap.dynamicObject = NULL;
-                visualMap[drawID] = tmpMap;
+
+                // the AbsolutePose is added by creating a new frame in the graph,
+                // so the AbsolutePose Item already exists when a new visual item is added into the graph
+                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
+                {
+                    // CAUTION: we assume that there is only one AbsolutePose in the frame
+                    // so we get the first item
+                    // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    visualMap[drawID] = &(it->getData());
+                }
+
+                // TODO: maybe we have to set the pose from AbsolutePose
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 utils::Vector p = t.transform.translation;
                 utils::Quaternion q = t.transform.orientation;
