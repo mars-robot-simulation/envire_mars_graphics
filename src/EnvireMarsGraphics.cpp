@@ -623,7 +623,6 @@ namespace mars
             nodeData.fromConfigMap(&node, "");
             // TODO: do we want to set default material in smurf if we dont have one
             ConfigMap material;
-            std::cout << node.toJsonString() << std::endl;
             if (node.hasKey("material")) {
                 material = node["material"];
             } else {
