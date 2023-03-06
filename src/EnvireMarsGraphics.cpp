@@ -97,6 +97,10 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>::subscribe(ControlCenter::envireGraph.get());
         }
 
         EnvireMarsGraphics::~EnvireMarsGraphics()
@@ -272,21 +276,17 @@ namespace mars
                 unsigned long drawID = graphics->addDrawObject(nodeData, 0);
                 graphics->setDrawObjectPos(drawID, t.transform.translation);
                 graphics->setDrawObjectRot(drawID, t.transform.orientation);
-                DynamicObjectItem *objectItem = NULL;
-                try
+
+                // the AbsolutePose is added by creating a new frame in the graph,
+                // so the AbsolutePose Item already exists when a new visual item is added into the graph
+                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
                 {
-                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<DynamicObjectItem>> it = ControlCenter::envireGraph->getItem<envire::core::Item<DynamicObjectItem>>(e.frame);
-                    objectItem = &(it->getData());
+                    // CAUTION: we assume that there is only one AbsolutePose in the frame
+                    // so we get the first item
+                    // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    frameMap[drawID] = &(it->getData());
                 }
-                catch (...)
-                {
-                    objectItem = NULL;
-                }
-                TmpMap tmpMap;
-                tmpMap.frame = e.frame;
-                tmpMap.visual = NULL;
-                tmpMap.dynamicObject = objectItem;
-                visualFrameMap[drawID] = tmpMap;
             }
         }
 
@@ -465,6 +465,8 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e)
         {
+            if (e.item->getTag() != "visual")
+                return;
             // create node data from smurf::Visual
             // store the item with draw id in map
             if(!graphics)
@@ -489,18 +491,141 @@ namespace mars
             // we should get rid of NodeData and use ConfigMap
             if(create)
             {
-
+                createVisual(node, e.frame);
             }
         }
 
-        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &node) {
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Capsule>>& e)
+        {
+            if (e.item->getTag() != "visual")
+                return;
+            // create node data from smurf::Visual
+            // store the item with draw id in map
+            if(!graphics)
+            {
+                return;
+            }
+            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
+            unsigned long drawID;
+
+            bool create = false;
+            envire::base_types::geometry::Capsule& geometry = e.item->getData();
+            ConfigMap node = geometry.getFullConfigMap();
+
+            node["origname"] = node["type"];
+            node["filename"] = "PRIMITIVE";
+            node["extend"]["x"] = node["radius"];
+            node["extend"]["y"] = node["length"];
+            create = true;
+
+            // TODO: we do this since we use everywhere NodeData
+            // we should get rid of NodeData and use ConfigMap
+            if(create)
+            {
+                createVisual(node, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e)
+        {
+            if (e.item->getTag() != "visual")
+                return;
+            // create node data from smurf::Visual
+            // store the item with draw id in map
+            if(!graphics)
+            {
+                return;
+            }
+            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
+            unsigned long drawID;
+
+            bool create = false;
+            envire::base_types::geometry::Cylinder& geometry = e.item->getData();
+            ConfigMap node = geometry.getFullConfigMap();
+
+            node["origname"] = node["type"];
+            node["filename"] = "PRIMITIVE";
+            node["extend"]["x"] = node["radius"];
+            node["extend"]["y"] = node["length"];
+            create = true;
+
+            // TODO: we do this since we use everywhere NodeData
+            // we should get rid of NodeData and use ConfigMap
+            if(create)
+            {
+                createVisual(node, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e)
+        {
+            if (e.item->getTag() != "visual")
+                return;
+            // create node data from smurf::Visual
+            // store the item with draw id in map
+            if(!graphics)
+            {
+                return;
+            }
+            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
+            unsigned long drawID;
+
+            bool create = false;
+            envire::base_types::geometry::Mesh& geometry = e.item->getData();
+            ConfigMap node = geometry.getFullConfigMap();
+
+            node["origname"] = "";
+            node["visualscale"]["x"] = node["scale"]["x"];
+            node["visualscale"]["y"] = node["scale"]["y"];
+            node["visualscale"]["z"] = node["scale"]["z"];
+            create = true;
+
+            // TODO: we do this since we use everywhere NodeData
+            // we should get rid of NodeData and use ConfigMap
+            if(create)
+            {
+                createVisual(node, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e)
+        {
+            if (e.item->getTag() != "visual")
+                return;
+            // create node data from smurf::Visual
+            // store the item with draw id in map
+            if(!graphics)
+            {
+                return;
+            }
+            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
+            unsigned long drawID;
+
+            bool create = false;
+            envire::base_types::geometry::Sphere& geometry = e.item->getData();
+            ConfigMap node = geometry.getFullConfigMap();
+
+            node["origname"] = node["type"];
+            node["filename"] = "PRIMITIVE";
+            node["extend"]["x"] = node["radius"];
+            create = true;
+
+            // TODO: we do this since we use everywhere NodeData
+            // we should get rid of NodeData and use ConfigMap
+            if(create)
+            {
+                createVisual(node, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId) {
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&node, "");
             // TODO: do we want to set default material in smurf if we dont have one
             ConfigMap material;
-            if (visual.material != nullptr) {
-                material = visual.material->getConfigMap();
-                nodeData.material.fromConfigMap(&material, "");
+            std::cout << node.toJsonString() << std::endl;
+            if (node.hasKey("material")) {
+                material = node["material"];
             } else {
                 material["name"] = "visual";
                 material["diffuseColor"]["a"] = 1.0;
@@ -516,17 +641,24 @@ namespace mars
                 material["ambientColor"]["g"] = 0.59;
                 material["ambientColor"]["b"] = 0.5;
             }
-            drawID = graphics->addDrawObject(nodeData, showGui);
-            TmpMap tmpMap;
-            tmpMap.frame = e.frame;
-            tmpMap.visual = &visual;
-            tmpMap.dynamicObject = NULL;
-            visualMap[drawID] = tmpMap;
-            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            nodeData.material.fromConfigMap(&material, "");
+            unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
+            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             utils::Vector p = t.transform.translation;
             utils::Quaternion q = t.transform.orientation;
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, q);
+
+            // the AbsolutePose is added by creating a new frame in the graph,
+            // so the AbsolutePose Item already exists when a new visual item is added into the graph
+            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            {
+                // CAUTION: we assume that there is only one AbsolutePose in the frame
+                // so we get the first item
+                // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                visualMap[drawID] = &(it->getData());
+            }
         }
 
         void EnvireMarsGraphics::produceData(const data_broker::DataInfo &info,

@@ -29,6 +29,10 @@
 #include <envire_base_types/Link.hpp>
 #include <envire_base_types/Inertial.hpp>
 #include <envire_base_types/geometry/Box.hpp>
+#include <envire_base_types/geometry/Capsule.hpp>
+#include <envire_base_types/geometry/Cylinder.hpp>
+#include <envire_base_types/geometry/Mesh.hpp>
+#include <envire_base_types/geometry/Sphere.hpp>
 #include <mars_interfaces/sim/AbsolutePose.hpp>
 
 namespace mars
@@ -54,7 +58,11 @@ namespace mars
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>
         {
 
         public:
@@ -92,8 +100,12 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Capsule>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e) override;
 
-            void createVisual(configmaps::ConfigMap &node);
+            void createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId);
 
         private:
             data_broker::DataBrokerInterface *dataBroker;
