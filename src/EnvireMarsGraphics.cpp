@@ -47,12 +47,14 @@ namespace mars
             showCollisions = false;
             showAnchor = false;
             vizTime = avgVizTime = 0;
+            colTime = avgColTime = 0;
             frameTime = avgFrameTime = 0;
             anchorTime = avgAnchorTime = 0;
             avgTimeCount = 0;
 
             dataBroker = libManager->getLibraryAs<data_broker::DataBrokerInterface>("data_broker");
             dbPackageMapping.add("vizTime", &avgVizTime);
+            dbPackageMapping.add("colTime", &avgColTime);
             dbPackageMapping.add("frameTime", &avgFrameTime);
             dbPackageMapping.add("anchorTime", &avgAnchorTime);
             if(dataBroker)
@@ -153,6 +155,23 @@ namespace mars
                 myTime += timeDiff;
                 vizTime += timeDiff;
             }
+            if (showCollisions)
+            {
+                for(auto &it: collisionMap)
+                {
+                    if (it.second)
+                    {
+                        graphics->setDrawObjectPos(it.first, it.second->position);
+                        graphics->setDrawObjectRot(it.first, it.second->rotation);
+                    }
+                }
+            }
+            if(dataBroker)
+            {
+                timeDiff = getTimeDiff(myTime);
+                myTime += timeDiff;
+                colTime += timeDiff;
+            }
             // todo: check if frames have to be updated
             // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
             // TODO: add menu showFrame
@@ -189,10 +208,12 @@ namespace mars
             if(++avgTimeCount == 100)
             {
                 avgVizTime = vizTime/avgTimeCount;
+                avgColTime = colTime/avgTimeCount;
                 avgFrameTime = frameTime/avgTimeCount;
                 avgAnchorTime = anchorTime/avgTimeCount;
                 avgTimeCount = 0;
                 vizTime = 0;
+                colTime = 0;
                 frameTime = 0;
                 anchorTime = 0;
             }
@@ -210,6 +231,10 @@ namespace mars
                     for(auto &it: visualMap)
                     {
                         graphics->setDrawObjectShow(it.first, showGui);
+                    }
+                    for (auto &it: collisionMap)
+                    {
+                        graphics->setDrawObjectShow(it.first, showCollisions);
                     }
                     for(auto &it: anchorMap)
                     {
@@ -467,166 +492,148 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e)
         {
-            if (e.item->getTag() != "visual")
-                return;
-            // create node data from smurf::Visual
-            // store the item with draw id in map
-            if(!graphics)
-            {
+            if (!graphics) {
                 return;
             }
+            // create node data from smurf::Visual
+            // store the item with draw id in map
             LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
-            unsigned long drawID;
 
-            bool create = false;
             envire::base_types::geometry::Box& geometry = e.item->getData();
-            ConfigMap node = geometry.getFullConfigMap();
+            ConfigMap config = geometry.getFullConfigMap();
 
-            node["origname"] = node["type"];
-            node["filename"] = "PRIMITIVE";
-            node["extend"]["x"] = node["size"]["x"];
-            node["extend"]["y"] = node["size"]["y"];
-            node["extend"]["z"] = node["size"]["z"];
-            create = true;
+            config["origname"] = config["type"];
+            config["filename"] = "PRIMITIVE";
+            config["extend"]["x"] = config["size"]["x"];
+            config["extend"]["y"] = config["size"]["y"];
+            config["extend"]["z"] = config["size"]["z"];
 
-            // TODO: we do this since we use everywhere NodeData
-            // we should get rid of NodeData and use ConfigMap
-            if(create)
+            if (e.item->getTag() == "visual")
             {
-                createVisual(node, e.frame);
+                LOG_INFO("VISUAL Box: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Box: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
             }
         }
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Capsule>>& e)
         {
-            if (e.item->getTag() != "visual")
-                return;
-            // create node data from smurf::Visual
-            // store the item with draw id in map
             if(!graphics)
             {
                 return;
             }
-            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
-            unsigned long drawID;
 
-            bool create = false;
             envire::base_types::geometry::Capsule& geometry = e.item->getData();
-            ConfigMap node = geometry.getFullConfigMap();
+            ConfigMap config = geometry.getFullConfigMap();
 
-            node["origname"] = node["type"];
-            node["filename"] = "PRIMITIVE";
-            node["extend"]["x"] = node["radius"];
-            node["extend"]["y"] = node["length"];
-            create = true;
+            config["origname"] = config["type"];
+            config["filename"] = "PRIMITIVE";
+            config["extend"]["x"] = config["radius"];
+            config["extend"]["y"] = config["length"];
 
-            // TODO: we do this since we use everywhere NodeData
-            // we should get rid of NodeData and use ConfigMap
-            if(create)
+            if (e.item->getTag() == "visual")
             {
-                createVisual(node, e.frame);
+                LOG_INFO("VISUAL Capsule: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Capsule: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
             }
         }
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e)
         {
-            if (e.item->getTag() != "visual")
-                return;
-            // create node data from smurf::Visual
-            // store the item with draw id in map
             if(!graphics)
             {
                 return;
             }
-            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
-            unsigned long drawID;
 
-            bool create = false;
             envire::base_types::geometry::Cylinder& geometry = e.item->getData();
-            ConfigMap node = geometry.getFullConfigMap();
+            ConfigMap config = geometry.getFullConfigMap();
 
-            node["origname"] = node["type"];
-            node["filename"] = "PRIMITIVE";
-            node["extend"]["x"] = node["radius"];
-            node["extend"]["y"] = node["length"];
-            create = true;
+            config["origname"] = config["type"];
+            config["filename"] = "PRIMITIVE";
+            config["extend"]["x"] = config["radius"];
+            config["extend"]["y"] = config["length"];
 
-            // TODO: we do this since we use everywhere NodeData
-            // we should get rid of NodeData and use ConfigMap
-            if(create)
+            if (e.item->getTag() == "visual")
             {
-                createVisual(node, e.frame);
+                LOG_INFO("VISUAL Cylinder: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Cylinder: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
             }
         }
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e)
         {
-            if (e.item->getTag() != "visual")
-                return;
-            // create node data from smurf::Visual
-            // store the item with draw id in map
             if(!graphics)
             {
                 return;
             }
-            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
-            unsigned long drawID;
 
-            bool create = false;
             envire::base_types::geometry::Mesh& geometry = e.item->getData();
-            ConfigMap node = geometry.getFullConfigMap();
+            ConfigMap config = geometry.getFullConfigMap();
 
-            node["origname"] = "";
-            node["visualscale"]["x"] = node["scale"]["x"];
-            node["visualscale"]["y"] = node["scale"]["y"];
-            node["visualscale"]["z"] = node["scale"]["z"];
-            create = true;
+            config["origname"] = "";
+            config["visualscale"]["x"] = config["scale"]["x"];
+            config["visualscale"]["y"] = config["scale"]["y"];
+            config["visualscale"]["z"] = config["scale"]["z"];
 
-            // TODO: we do this since we use everywhere NodeData
-            // we should get rid of NodeData and use ConfigMap
-            if(create)
+            if (e.item->getTag() == "visual")
             {
-                createVisual(node, e.frame);
+                LOG_INFO("VISUAL Mesh: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Mesh: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
             }
         }
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e)
         {
-            if (e.item->getTag() != "visual")
-                return;
-            // create node data from smurf::Visual
-            // store the item with draw id in map
             if(!graphics)
             {
                 return;
             }
-            LOG_INFO("SMURF::Visual add: %s", e.frame.c_str());
-            unsigned long drawID;
 
-            bool create = false;
             envire::base_types::geometry::Sphere& geometry = e.item->getData();
-            ConfigMap node = geometry.getFullConfigMap();
+            ConfigMap config = geometry.getFullConfigMap();
 
-            node["origname"] = node["type"];
-            node["filename"] = "PRIMITIVE";
-            node["extend"]["x"] = node["radius"];
-            create = true;
+            config["origname"] = config["type"];
+            config["filename"] = "PRIMITIVE";
+            config["extend"]["x"] = config["radius"];
 
-            // TODO: we do this since we use everywhere NodeData
-            // we should get rid of NodeData and use ConfigMap
-            if(create)
+            if (e.item->getTag() == "visual")
             {
-                createVisual(node, e.frame);
+                LOG_INFO("VISUAL Sphere: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Sphere: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
             }
         }
 
-        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId) {
+        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &config, envire::core::FrameId frameId) {
             interfaces::NodeData nodeData;
-            nodeData.fromConfigMap(&node, "");
+            nodeData.fromConfigMap(&config, "");
             // TODO: do we want to set default material in smurf if we dont have one
             ConfigMap material;
-            if (node.hasKey("material")) {
-                material = node["material"];
+            if (config.hasKey("material")) {
+                material = config["material"];
             } else {
                 material["name"] = "visual";
                 material["diffuseColor"]["a"] = 1.0;
@@ -643,6 +650,7 @@ namespace mars
                 material["ambientColor"]["b"] = 0.5;
             }
             nodeData.material.fromConfigMap(&material, "");
+
             unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
             envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             utils::Vector p = t.transform.translation;
@@ -659,6 +667,51 @@ namespace mars
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
                 envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 visualMap[drawID] = &(it->getData());
+            }
+        }
+
+        void EnvireMarsGraphics::createCollision(configmaps::ConfigMap &config, envire::core::FrameId frameId)
+        {
+            std::cout << "-----------create collision-------------" << std::endl;
+            // map["movable"] = true;
+            interfaces::NodeData nodeData;
+            nodeData.fromConfigMap(&config, "");
+
+            configmaps::ConfigMap material;
+            material["name"] = "collision";
+            material["diffuseColor"]["a"] = 1.0;
+            material["diffuseColor"]["r"] = 0.7;
+            material["diffuseColor"]["g"] = 0.39;
+            material["diffuseColor"]["b"] = 0.3;
+            material["specularColor"]["a"] = 1.0;
+            material["specularColor"]["r"] = 0.0;
+            material["specularColor"]["g"] = 0.0;
+            material["specularColor"]["b"] = 0.0;
+            material["ambientColor"]["a"] = 1.0;
+            material["ambientColor"]["r"] = 0.7;
+            material["ambientColor"]["g"] = 0.59;
+            material["ambientColor"]["b"] = 0.5;
+            material["shininess"] = 0.;
+            material["transparency"] = 0.3;
+
+            nodeData.material.fromConfigMap(&material, "");
+
+            unsigned long drawID = graphics->addDrawObject(nodeData, showCollisions);
+            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            utils::Vector p = t.transform.translation;
+            utils::Quaternion q = t.transform.orientation;
+            graphics->setDrawObjectPos(drawID, p);
+            graphics->setDrawObjectRot(drawID, q);
+
+            // the AbsolutePose is added by creating a new frame in the graph,
+            // so the AbsolutePose Item already exists when a new visual item is added into the graph
+            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            {
+                // CAUTION: we assume that there is only one AbsolutePose in the frame
+                // so we get the first item
+                // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                collisionMap[drawID] = &(it->getData());
             }
         }
 

@@ -116,6 +116,7 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
 
             void createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId);
+            void createCollision(configmaps::ConfigMap &config, envire::core::FrameId frameId);
             void createJoint(const std::string &jointName, envire::core::FrameId frameId);
 
         private:
@@ -124,11 +125,11 @@ namespace mars
             cfg_manager::CFGManagerInterface *cfg;
             data_broker::DataPackageMapping dbPackageMapping;
             //std::map<unsigned long, TmpMap> visualFrameMap;
-            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, frameMap, anchorMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, collisionMap, frameMap, anchorMap;
             //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
             bool showGui, showCollisions, showAnchor;
-            double vizTime, avgVizTime, frameTime, avgFrameTime, anchorTime, avgAnchorTime;
+            double vizTime, avgVizTime, colTime, avgColTime, frameTime, avgFrameTime, anchorTime, avgAnchorTime;
             int avgTimeCount;
         };
 
