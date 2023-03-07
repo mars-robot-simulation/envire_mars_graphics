@@ -33,6 +33,10 @@
 #include <envire_base_types/geometry/Cylinder.hpp>
 #include <envire_base_types/geometry/Mesh.hpp>
 #include <envire_base_types/geometry/Sphere.hpp>
+#include <envire_base_types/joints/Fixed.hpp>
+#include <envire_base_types/joints/Revolute.hpp>
+#include <envire_base_types/joints/Continuous.hpp>
+
 #include <mars_interfaces/sim/AbsolutePose.hpp>
 
 namespace mars
@@ -62,7 +66,10 @@ namespace mars
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>
         {
 
         public:
@@ -104,8 +111,12 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
 
             void createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId);
+            void createJoint(const std::string &jointName, envire::core::FrameId frameId);
 
         private:
             data_broker::DataBrokerInterface *dataBroker;
@@ -113,8 +124,7 @@ namespace mars
             cfg_manager::CFGManagerInterface *cfg;
             data_broker::DataPackageMapping dbPackageMapping;
             //std::map<unsigned long, TmpMap> visualFrameMap;
-            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, frameMap;
-            std::map<unsigned long, std::pair<interfaces::AbsolutePose*, Eigen::Affine3d>> anchorMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, frameMap, anchorMap;
             //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
             bool showGui, showCollisions, showAnchor;

@@ -101,6 +101,9 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(ControlCenter::envireGraph.get());
         }
 
         EnvireMarsGraphics::~EnvireMarsGraphics()
@@ -171,10 +174,9 @@ namespace mars
             {
                 for(auto &it: anchorMap)
                 {
-                    if (it.second.first)
+                    if (it.second)
                     {
-                        utils::Vector p = it.second.first->position+it.second.first->rotation*it.second.second.translation();
-                        graphics->setDrawObjectPos(it.first, p);
+                        graphics->setDrawObjectPos(it.first, it.second->position);
                     }
                 }
             }
@@ -335,14 +337,14 @@ namespace mars
 
                 // the AbsolutePose is added by creating a new frame in the graph,
                 // so the AbsolutePose Item already exists when a new visual item is added into the graph
-                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
+               /* if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
                 {
                     // CAUTION: we assume that there is only one AbsolutePose in the frame
                     // so we get the first item
                     // TODO: add handling/warning if there is multiple AbsolutePose for some reason
                     envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
                     anchorMap[drawID] = std::make_pair(&(it->getData()), transform);
-                }
+                }*/
 
             }
         }
@@ -657,6 +659,73 @@ namespace mars
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
                 envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 visualMap[drawID] = &(it->getData());
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
+        {
+            if(graphics)
+            {
+                envire::base_types::joints::Fixed &joint = e.item->getData();
+                createJoint(joint.name, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
+        {
+            if(graphics)
+            {
+                envire::base_types::joints::Revolute &joint = e.item->getData();
+                createJoint(joint.name, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
+        {
+            if(graphics)
+            {
+                envire::base_types::joints::Continuous &joint = e.item->getData();
+                createJoint(joint.name, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::createJoint(const std::string &jointName, envire::core::FrameId frameId)
+        {
+            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            Vector p = t.transform.translation;
+
+            ConfigMap config, material;
+            config["origname"] = "sphere";
+            config["filename"] = "PRIMITIVE";
+            config["name"] = jointName;
+            config["type"] = "sphere";
+            config["extend"]["x"] = 0.025;
+            config["extend"]["y"] = 0.0;
+            config["extend"]["z"] = 0.0;
+            material["name"] << "anchor";
+            material["diffuseColor"]["r"] << 0.3;
+            material["diffuseColor"]["g"] << 0.3;
+            material["diffuseColor"]["b"] << 0.7;
+            material["diffuseColor"]["a"] << 1.0;
+            material["shininess"] << 0.0;
+            material["transparency"] << 0.5;
+
+            interfaces::NodeData nodeData;
+            nodeData.fromConfigMap(&config, "");
+            nodeData.material.fromConfigMap(&material, "");
+            unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
+            graphics->setDrawObjectPos(drawID, p);
+            graphics->setDrawObjectRot(drawID, t.transform.orientation);
+
+            // the AbsolutePose is added by creating a new frame in the graph,
+            // so the AbsolutePose Item already exists when a new visual item is added into the graph
+            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            {
+                // CAUTION: we assume that there is only one AbsolutePose in the frame
+                // so we get the first item
+                // TODO: add handling/warning if there is multiple AbsolutePose for some reason
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                anchorMap[drawID] = &(it->getData());
             }
         }
 
