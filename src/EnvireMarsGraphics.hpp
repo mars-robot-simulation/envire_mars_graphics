@@ -43,23 +43,10 @@ namespace mars
 {
     namespace envire_mars_graphics
     {
-
-        class TmpMap
-        {
-        public:
-            envire::core::FrameId frame;
-            smurf::Visual *visual;
-            interfaces::DynamicObjectItem *dynamicObject;
-        };
-
         class EnvireMarsGraphics : public lib_manager::LibInterface,
                                    public interfaces::GraphicsUpdateInterface,
                                    public cfg_manager::CFGClient,
                                    public data_broker::ProducerInterface,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Visual>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>,
@@ -100,10 +87,6 @@ namespace mars
                                      int callbackParam) override;
 
             // envire callbacks
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Visual>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e) override;
@@ -124,7 +107,6 @@ namespace mars
             interfaces::GraphicsManagerInterface *graphics;
             cfg_manager::CFGManagerInterface *cfg;
             data_broker::DataPackageMapping dbPackageMapping;
-            //std::map<unsigned long, TmpMap> visualFrameMap;
             std::map<unsigned long, interfaces::AbsolutePose*> visualMap, collisionMap, frameMap, anchorMap;
             //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;

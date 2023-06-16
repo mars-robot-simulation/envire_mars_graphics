@@ -25,15 +25,15 @@ CMAKE_USE_FULL_RPATH("${CMAKE_INSTALL_PREFIX}/lib")
 
 #Get linker and compiler flags from pkg-config
 pkg_check_modules(PKGCONFIG REQUIRED
-			    lib_manager
-			    mars_interfaces
-          mars_utils
-          cfg_manager
-          mars_graphics
-          configmaps
-          envire_core
-          envire_smurf
-          data_broker
+    lib_manager
+    mars_interfaces
+    mars_utils
+    cfg_manager
+    mars_graphics
+    configmaps
+    data_broker
+    envire_core
+    envire_base_types
 )
 
 include_directories(${PKGCONFIG_INCLUDE_DIRS})
