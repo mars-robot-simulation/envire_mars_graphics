@@ -452,7 +452,6 @@ namespace mars
 
         void EnvireMarsGraphics::createCollision(configmaps::ConfigMap &config, envire::core::FrameId frameId)
         {
-            std::cout << "-----------create collision-------------" << std::endl;
             // map["movable"] = true;
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
