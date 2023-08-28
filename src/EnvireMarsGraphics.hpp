@@ -6,10 +6,10 @@
  */
 
 #pragma once
-#include <mars/utils/Vector.h>
+#include <mars_utils/Vector.h>
 
 
-#include <mars/cfg_manager/CFGManagerInterface.h>
+#include <cfg_manager/CFGManagerInterface.h>
 #include <envire_core/items/Item.hpp>
 #include <envire_core/graph/EnvireGraph.hpp>
 #include <envire_core/graph/TreeView.hpp>
@@ -18,9 +18,9 @@
 #include <mars_interfaces/graphics/GraphicsManagerInterface.h>
 #include <mars_interfaces/sim/DynamicObject.hpp>
 
-#include <mars/data_broker/ProducerInterface.h>
-#include <mars/data_broker/DataBrokerInterface.h>
-#include <mars/data_broker/DataPackageMapping.h>
+#include <data_broker/ProducerInterface.h>
+#include <data_broker/DataBrokerInterface.h>
+#include <data_broker/DataPackageMapping.h>
 
 #include <mars_ode_collision/objects/Object.hpp>
 

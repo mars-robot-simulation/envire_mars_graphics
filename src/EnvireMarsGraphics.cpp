@@ -17,8 +17,8 @@
 
 //#include "PhysicsMapper.h"
 
-#include <mars/utils/mathUtils.h>
-#include <mars/utils/misc.h>
+#include <mars_utils/mathUtils.h>
+#include <mars_utils/misc.h>
 #include <lib_manager/LibInterface.hpp>
 #include <lib_manager/LibManager.hpp>
 
