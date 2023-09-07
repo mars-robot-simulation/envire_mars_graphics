@@ -8,7 +8,6 @@
 #pragma once
 #include <mars_utils/Vector.h>
 
-
 #include <cfg_manager/CFGManagerInterface.h>
 #include <envire_core/items/Item.hpp>
 #include <envire_core/graph/EnvireGraph.hpp>
@@ -61,7 +60,12 @@ namespace mars
 
         public:
             EnvireMarsGraphics(lib_manager::LibManager *theManager); ///< Constructor of the \c class Simulator.
+            EnvireMarsGraphics(lib_manager::LibManager *theManager,
+                               std::shared_ptr<envire::core::EnvireGraph> envireGraph,
+                               std::shared_ptr<envire::core::TreeView> graphTreeView);
             virtual ~EnvireMarsGraphics();
+
+            void init(void);
 
             // --- LibInterface ---
             int getLibVersion() const override
@@ -103,6 +107,8 @@ namespace mars
             void createJoint(const std::string &jointName, envire::core::FrameId frameId);
 
         private:
+            std::shared_ptr<envire::core::EnvireGraph> envireGraph;
+            std::shared_ptr<envire::core::TreeView> graphTreeView;
             data_broker::DataBrokerInterface *dataBroker;
             interfaces::GraphicsManagerInterface *graphics;
             cfg_manager::CFGManagerInterface *cfg;

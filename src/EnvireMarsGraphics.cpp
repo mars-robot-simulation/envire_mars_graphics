@@ -40,6 +40,21 @@ namespace mars
         EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager) :
             lib_manager::LibInterface(theManager)
         {
+            envireGraph = ControlCenter::envireGraph;
+            graphTreeView = ControlCenter::graphTreeView;
+            init();
+        }
+
+        EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager,
+                                               std::shared_ptr<envire::core::EnvireGraph> envireGraph,
+                                               std::shared_ptr<envire::core::TreeView> graphTreeView) :
+            lib_manager::LibInterface(theManager), envireGraph(envireGraph), graphTreeView(graphTreeView)
+        {
+            init();
+        }
+
+        void EnvireMarsGraphics::init(void)
+        {
             showGui = true;
             showCollisions = false;
             showAnchor = false;
@@ -88,17 +103,17 @@ namespace mars
 
             // todo: parse the graph and search for frames, etc.
 
-            //GraphEventDispatcher::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(ControlCenter::envireGraph.get());
+            //GraphEventDispatcher::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(envireGraph.get());
         }
 
         EnvireMarsGraphics::~EnvireMarsGraphics()
@@ -240,7 +255,7 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
         {
-            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
             if(graphics)
             {
                 // crate empty object to be able to use the frame debug option of mars_graphics
@@ -258,12 +273,12 @@ namespace mars
 
                 // the AbsolutePose is added by creating a new frame in the graph,
                 // so the AbsolutePose Item already exists when a new visual item is added into the graph
-                if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
+                if (envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(e.frame))
                 {
                     // CAUTION: we assume that there is only one AbsolutePose in the frame
                     // so we get the first item
                     // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
                     frameMap[drawID] = &(it->getData());
                 }
             }
@@ -432,7 +447,7 @@ namespace mars
             nodeData.material.fromConfigMap(&material, "");
 
             unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
-            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             utils::Vector p = t.transform.translation;
             utils::Quaternion q = t.transform.orientation;
             graphics->setDrawObjectPos(drawID, p);
@@ -440,12 +455,12 @@ namespace mars
 
             // the AbsolutePose is added by creating a new frame in the graph,
             // so the AbsolutePose Item already exists when a new visual item is added into the graph
-            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            if (envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
             {
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 visualMap[drawID] = &(it->getData());
             }
         }
@@ -476,7 +491,7 @@ namespace mars
             nodeData.material.fromConfigMap(&material, "");
 
             unsigned long drawID = graphics->addDrawObject(nodeData, showCollisions);
-            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             utils::Vector p = t.transform.translation;
             utils::Quaternion q = t.transform.orientation;
             graphics->setDrawObjectPos(drawID, p);
@@ -484,12 +499,12 @@ namespace mars
 
             // the AbsolutePose is added by creating a new frame in the graph,
             // so the AbsolutePose Item already exists when a new visual item is added into the graph
-            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            if (envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
             {
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 collisionMap[drawID] = &(it->getData());
             }
         }
@@ -523,7 +538,7 @@ namespace mars
 
         void EnvireMarsGraphics::createJoint(const std::string &jointName, envire::core::FrameId frameId)
         {
-            envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             Vector p = t.transform.translation;
 
             ConfigMap config, material;
@@ -551,12 +566,12 @@ namespace mars
 
             // the AbsolutePose is added by creating a new frame in the graph,
             // so the AbsolutePose Item already exists when a new visual item is added into the graph
-            if (ControlCenter::envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
+            if (envireGraph->containsItems<envire::core::Item<interfaces::AbsolutePose>>(frameId))
             {
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = ControlCenter::envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 anchorMap[drawID] = &(it->getData());
             }
         }
