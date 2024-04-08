@@ -21,8 +21,6 @@
 #include <data_broker/DataBrokerInterface.h>
 #include <data_broker/DataPackageMapping.h>
 
-#include <mars_ode_collision/objects/Object.hpp>
-
 #include <iostream>
 
 #include <envire_base_types/Link.hpp>
