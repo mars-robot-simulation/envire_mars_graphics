@@ -32,11 +32,8 @@ namespace mars
 {
     namespace envire_mars_graphics
     {
-
-        using std::string;
         using namespace utils;
         using namespace interfaces;
-        using namespace configmaps;
 
         EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager) :
             lib_manager::LibInterface{theManager},
@@ -79,10 +76,10 @@ namespace mars
                 // initialize the dataBroker Package
                 data_broker::DataPackage dbPackage;
                 dbPackageMapping.writePackage(&dbPackage);
-                dataBroker->pushData(groupName, dataName, dbPackage, NULL,
-                                     data_broker::DATA_PACKAGE_READ_FLAG);
+                dataBroker->pushData(groupName, dataName, dbPackage, nullptr, data_broker::DATA_PACKAGE_READ_FLAG);
+
                 // register as producer
-                constexpr int update_period = 100;
+                constexpr int update_period{100};
                 dataBroker->registerTimedProducer(this, groupName, dataName, "_REALTIME_", update_period);
             }
 
@@ -96,13 +93,14 @@ namespace mars
             if(cfg)
             {
                 // TODO: add frame visualisation showFrames into the menu
-                cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.", (int)1, this);
+                constexpr int visual_rep_value{1};
+                cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.", visual_rep_value, this);
                 showGui = cfgVisRep.iValue & 1;
                 showCollisions = cfgVisRep.iValue & 2;
                 showAnchor = cfgVisRep.iValue & 4;
             }
 
-            // todo: parse the graph and search for frames, etc.
+            // TODO: parse the graph and search for frames, etc.
 
             //GraphEventDispatcher::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(envireGraph.get());
@@ -147,7 +145,7 @@ namespace mars
             }
             if(showGui)
             {
-                for(auto &it: visualMap)
+                for(const auto &it: visualMap)
                 {
                     if (it.second)
                     {
@@ -164,7 +162,7 @@ namespace mars
             }
             if (showCollisions)
             {
-                for(auto &it: collisionMap)
+                for(const auto &it: collisionMap)
                 {
                     if (it.second)
                     {
@@ -182,7 +180,7 @@ namespace mars
             // todo: check if frames have to be updated
             // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
             // TODO: add menu showFrame
-            for (auto &it : frameMap)
+            for (const auto &it : frameMap)
             {
                 if (it.second)
                 {
@@ -198,7 +196,7 @@ namespace mars
             }
             if(showAnchor)
             {
-                for(auto &it: anchorMap)
+                for(const auto &it: anchorMap)
                 {
                     if (it.second)
                     {
@@ -212,7 +210,7 @@ namespace mars
                 myTime += timeDiff;
                 anchorTime += static_cast<double>(timeDiff);
             }
-            constexpr int averaging_period_length = 100;
+            constexpr int averaging_period_length{100};
             if(++avgTimeCount == averaging_period_length)
             {
                 avgVizTime = vizTime/avgTimeCount;
@@ -236,15 +234,15 @@ namespace mars
                     showGui = _property.iValue & 1;
                     showCollisions = _property.iValue & 2;
                     showAnchor = _property.iValue & 4;
-                    for(auto &it: visualMap)
+                    for(const auto &it: visualMap)
                     {
                         graphics->setDrawObjectShow(it.first, showGui);
                     }
-                    for (auto &it: collisionMap)
+                    for (const auto &it: collisionMap)
                     {
                         graphics->setDrawObjectShow(it.first, showCollisions);
                     }
-                    for(auto &it: anchorMap)
+                    for(const auto &it: anchorMap)
                     {
                         graphics->setDrawObjectShow(it.first, showAnchor);
                     }
@@ -255,7 +253,7 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
         {
-            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            const auto& transform{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame)};
             if(graphics)
             {
                 // crate empty object to be able to use the frame debug option of mars_graphics
@@ -268,8 +266,8 @@ namespace mars
                 interfaces::NodeData nodeData;
                 nodeData.fromConfigMap(&config, "");
                 const unsigned long drawID = graphics->addDrawObject(nodeData, 0);
-                graphics->setDrawObjectPos(drawID, t.transform.translation);
-                graphics->setDrawObjectRot(drawID, t.transform.orientation);
+                graphics->setDrawObjectPos(drawID, transform.transform.translation);
+                graphics->setDrawObjectRot(drawID, transform.transform.orientation);
 
                 // the AbsolutePose is added by creating a new frame in the graph,
                 // so the AbsolutePose Item already exists when a new visual item is added into the graph
@@ -278,7 +276,7 @@ namespace mars
                     // CAUTION: we assume that there is only one AbsolutePose in the frame
                     // so we get the first item
                     // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                    const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    const auto& it{envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame)};
                     frameMap[drawID] = &(it->getData());
                 }
             }
@@ -295,8 +293,8 @@ namespace mars
                 return;
             }
 
-            envire::base_types::geometry::Box& geometry = e.item->getData();
-            ConfigMap config = geometry.getFullConfigMap();
+            auto& geometry{e.item->getData()};
+            ConfigMap config{geometry.getFullConfigMap()};
 
             config["origname"] = config["type"];
             config["filename"] = "PRIMITIVE";
@@ -323,8 +321,8 @@ namespace mars
                 return;
             }
 
-            envire::base_types::geometry::Capsule& geometry = e.item->getData();
-            ConfigMap config = geometry.getFullConfigMap();
+            auto& geometry{e.item->getData()};
+            ConfigMap config{geometry.getFullConfigMap()};
 
             config["origname"] = config["type"];
             config["filename"] = "PRIMITIVE";
@@ -350,8 +348,8 @@ namespace mars
                 return;
             }
 
-            envire::base_types::geometry::Cylinder& geometry = e.item->getData();
-            ConfigMap config = geometry.getFullConfigMap();
+            auto& geometry{e.item->getData()};
+            ConfigMap config{geometry.getFullConfigMap()};
 
             config["origname"] = config["type"];
             config["filename"] = "PRIMITIVE";
@@ -377,8 +375,8 @@ namespace mars
                 return;
             }
 
-            envire::base_types::geometry::Mesh& geometry = e.item->getData();
-            ConfigMap config = geometry.getFullConfigMap();
+            auto& geometry{e.item->getData()};
+            ConfigMap config{geometry.getFullConfigMap()};
 
             config["origname"] = "";
             config["visualscale"]["x"] = config["scale"]["x"];
@@ -404,8 +402,8 @@ namespace mars
                 return;
             }
 
-            envire::base_types::geometry::Sphere& geometry = e.item->getData();
-            ConfigMap config = geometry.getFullConfigMap();
+            auto& geometry{e.item->getData()};
+            ConfigMap config{geometry.getFullConfigMap()};
 
             config["origname"] = config["type"];
             config["filename"] = "PRIMITIVE";
@@ -450,10 +448,10 @@ namespace mars
             }
             nodeData.material.fromConfigMap(&material, "");
 
-            const unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
-            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            const utils::Vector p = t.transform.translation;
-            const utils::Quaternion q = t.transform.orientation;
+            const unsigned long drawID{graphics->addDrawObject(nodeData, showGui)};
+            const auto& transform{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId)};
+            const utils::Vector& p{transform.transform.translation};
+            const utils::Quaternion& q{transform.transform.orientation};
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, q);
 
@@ -464,7 +462,7 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it{envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId)};
                 visualMap[drawID] = &(it->getData());
             }
         }
@@ -495,10 +493,10 @@ namespace mars
 
             nodeData.material.fromConfigMap(&material, "");
 
-            const unsigned long drawID = graphics->addDrawObject(nodeData, showCollisions);
-            const envire::core::Transform& t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            const utils::Vector& p = t.transform.translation;
-            const utils::Quaternion& q = t.transform.orientation;
+            const unsigned long drawID{graphics->addDrawObject(nodeData, showCollisions)};
+            const auto& transform{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId)};
+            const utils::Vector& p{transform.transform.translation};
+            const utils::Quaternion& q{transform.transform.orientation};
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, q);
 
@@ -509,42 +507,45 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it{envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId)};
                 collisionMap[drawID] = &(it->getData());
             }
         }
 
+        // TODO: Use template method
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
         {
             if(graphics)
             {
-                envire::base_types::joints::Fixed &joint = e.item->getData();
+                const auto& joint{e.item->getData()};
                 createJoint(joint.name, e.frame);
             }
         }
 
+        // TODO: Use template method
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
         {
             if(graphics)
             {
-                envire::base_types::joints::Revolute &joint = e.item->getData();
+                const auto& joint{e.item->getData()};
                 createJoint(joint.name, e.frame);
             }
         }
 
+        // TODO: Use template method
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
         {
             if(graphics)
             {
-                envire::base_types::joints::Continuous &joint = e.item->getData();
+                const auto& joint{e.item->getData()};
                 createJoint(joint.name, e.frame);
             }
         }
 
         void EnvireMarsGraphics::createJoint(const std::string &jointName, envire::core::FrameId frameId)
         {
-            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            const Vector p = t.transform.translation;
+            const envire::core::Transform& transform{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId)};
+            const Vector& p{transform.transform.translation};
 
             // TODO: Use named constants instead of magic numbers
             ConfigMap config, material;
@@ -568,7 +569,7 @@ namespace mars
             nodeData.material.fromConfigMap(&material, "");
             const unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
             graphics->setDrawObjectPos(drawID, p);
-            graphics->setDrawObjectRot(drawID, t.transform.orientation);
+            graphics->setDrawObjectRot(drawID, transform.transform.orientation);
 
             // the AbsolutePose is added by creating a new frame in the graph,
             // so the AbsolutePose Item already exists when a new visual item is added into the graph
@@ -577,7 +578,7 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it{envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId)};
                 anchorMap[drawID] = &(it->getData());
             }
         }
