@@ -25,6 +25,7 @@
 #include <mars_interfaces/Logging.hpp>
 #include <mars_interfaces/MARSDefs.h>
 
+
 typedef envire::core::GraphTraits::vertex_descriptor VertexDesc;
 
 namespace mars
@@ -38,17 +39,19 @@ namespace mars
         using namespace configmaps;
 
         EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager) :
-            lib_manager::LibInterface(theManager)
+            lib_manager::LibInterface{theManager},
+            envireGraph{ControlCenter::envireGraph},
+            graphTreeView{ControlCenter::graphTreeView}
         {
-            envireGraph = ControlCenter::envireGraph;
-            graphTreeView = ControlCenter::graphTreeView;
             init();
         }
 
         EnvireMarsGraphics::EnvireMarsGraphics(lib_manager::LibManager *theManager,
                                                std::shared_ptr<envire::core::EnvireGraph> envireGraph,
                                                std::shared_ptr<envire::core::TreeView> graphTreeView) :
-            lib_manager::LibInterface(theManager), envireGraph(envireGraph), graphTreeView(graphTreeView)
+            lib_manager::LibInterface{theManager},
+            envireGraph{envireGraph},
+            graphTreeView{graphTreeView}
         {
             init();
         }
@@ -71,17 +74,16 @@ namespace mars
             dbPackageMapping.add("anchorTime", &avgAnchorTime);
             if(dataBroker)
             {
-                std::string groupName, dataName;
-                groupName = "EnvireMarsGraphcis";
-                dataName = "debugTime";
+                const std::string groupName{"EnvireMarsGraphcis"};
+                const std::string dataName{"debugTime"};
                 // initialize the dataBroker Package
                 data_broker::DataPackage dbPackage;
                 dbPackageMapping.writePackage(&dbPackage);
                 dataBroker->pushData(groupName, dataName, dbPackage, NULL,
                                      data_broker::DATA_PACKAGE_READ_FLAG);
                 // register as producer
-                dataBroker->registerTimedProducer(this, groupName, dataName,
-                                                  "_REALTIME_", 100);
+                constexpr int update_period = 100;
+                dataBroker->registerTimedProducer(this, groupName, dataName, "_REALTIME_", update_period);
             }
 
             graphics = libManager->getLibraryAs<GraphicsManagerInterface>("mars_graphics");
@@ -94,8 +96,7 @@ namespace mars
             if(cfg)
             {
                 // TODO: add frame visualisation showFrames into the menu
-                cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.",
-                                                     (int)1, this);
+                cfgVisRep = cfg->getOrCreateProperty("Simulator", "visual rep.", (int)1, this);
                 showGui = cfgVisRep.iValue & 1;
                 showCollisions = cfgVisRep.iValue & 2;
                 showAnchor = cfgVisRep.iValue & 4;
@@ -128,11 +129,9 @@ namespace mars
             }
             if(dataBroker)
             {
-                std::string groupName, dataName;
-                groupName = "EnvireMarsGraphics";
-                dataName = "debugTime";
-                dataBroker->unregisterTimedProducer(this, groupName, dataName,
-                                                    "_REALTIME_");
+                const std::string groupName{"EnvireMarsGraphics"};
+                const std::string dataName{"debugTime"};
+                dataBroker->unregisterTimedProducer(this, groupName, dataName, "_REALTIME_");
                 libManager->releaseLibrary("data_broker");
             }
         }
@@ -140,8 +139,8 @@ namespace mars
 
         void EnvireMarsGraphics::preGraphicsUpdate(void)
         {
-            long myTime;
-            long timeDiff;
+            long long myTime;
+            long long timeDiff;
             if(dataBroker)
             {
                 myTime = utils::getTime();
@@ -161,7 +160,7 @@ namespace mars
             {
                 timeDiff = getTimeDiff(myTime);
                 myTime += timeDiff;
-                vizTime += timeDiff;
+                vizTime += static_cast<double>(timeDiff);
             }
             if (showCollisions)
             {
@@ -178,7 +177,7 @@ namespace mars
             {
                 timeDiff = getTimeDiff(myTime);
                 myTime += timeDiff;
-                colTime += timeDiff;
+                colTime += static_cast<double>(timeDiff);
             }
             // todo: check if frames have to be updated
             // ideally: frames are always updated and anchors, visuals, and collisions are moved by frame
@@ -195,7 +194,7 @@ namespace mars
             {
                 timeDiff = getTimeDiff(myTime);
                 myTime += timeDiff;
-                frameTime += timeDiff;
+                frameTime += static_cast<double>(timeDiff);
             }
             if(showAnchor)
             {
@@ -211,9 +210,10 @@ namespace mars
             {
                 timeDiff = getTimeDiff(myTime);
                 myTime += timeDiff;
-                anchorTime += timeDiff;
+                anchorTime += static_cast<double>(timeDiff);
             }
-            if(++avgTimeCount == 100)
+            constexpr int averaging_period_length = 100;
+            if(++avgTimeCount == averaging_period_length)
             {
                 avgVizTime = vizTime/avgTimeCount;
                 avgColTime = colTime/avgTimeCount;
@@ -255,7 +255,7 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
         {
-            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
             if(graphics)
             {
                 // crate empty object to be able to use the frame debug option of mars_graphics
@@ -267,7 +267,7 @@ namespace mars
                 config["createFrame"] = true;
                 interfaces::NodeData nodeData;
                 nodeData.fromConfigMap(&config, "");
-                unsigned long drawID = graphics->addDrawObject(nodeData, 0);
+                const unsigned long drawID = graphics->addDrawObject(nodeData, 0);
                 graphics->setDrawObjectPos(drawID, t.transform.translation);
                 graphics->setDrawObjectRot(drawID, t.transform.orientation);
 
@@ -278,7 +278,7 @@ namespace mars
                     // CAUTION: we assume that there is only one AbsolutePose in the frame
                     // so we get the first item
                     // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                    envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
+                    const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(e.frame);
                     frameMap[drawID] = &(it->getData());
                 }
             }
@@ -290,7 +290,8 @@ namespace mars
 
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e)
         {
-            if (!graphics) {
+            if (!graphics)
+            {
                 return;
             }
 
@@ -427,9 +428,12 @@ namespace mars
             nodeData.fromConfigMap(&config, "");
             // TODO: do we want to set default material in smurf if we dont have one
             ConfigMap material;
-            if (config.hasKey("material")) {
+            if (config.hasKey("material"))
+            {
                 material = config["material"];
-            } else {
+            } else
+            {
+                // TODO: Use named colors instead of magic numbers
                 material["name"] = "visual";
                 material["diffuseColor"]["a"] = 1.0;
                 material["diffuseColor"]["r"] = 0.7;
@@ -446,10 +450,10 @@ namespace mars
             }
             nodeData.material.fromConfigMap(&material, "");
 
-            unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
-            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            utils::Vector p = t.transform.translation;
-            utils::Quaternion q = t.transform.orientation;
+            const unsigned long drawID = graphics->addDrawObject(nodeData, showGui);
+            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            const utils::Vector p = t.transform.translation;
+            const utils::Quaternion q = t.transform.orientation;
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, q);
 
@@ -460,7 +464,7 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 visualMap[drawID] = &(it->getData());
             }
         }
@@ -471,6 +475,7 @@ namespace mars
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
 
+            // TODO: Use named colors instead of magic numbers
             configmaps::ConfigMap material;
             material["name"] = "collision";
             material["diffuseColor"]["a"] = 1.0;
@@ -490,10 +495,10 @@ namespace mars
 
             nodeData.material.fromConfigMap(&material, "");
 
-            unsigned long drawID = graphics->addDrawObject(nodeData, showCollisions);
-            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            utils::Vector p = t.transform.translation;
-            utils::Quaternion q = t.transform.orientation;
+            const unsigned long drawID = graphics->addDrawObject(nodeData, showCollisions);
+            const envire::core::Transform& t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            const utils::Vector& p = t.transform.translation;
+            const utils::Quaternion& q = t.transform.orientation;
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, q);
 
@@ -504,7 +509,7 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 collisionMap[drawID] = &(it->getData());
             }
         }
@@ -538,9 +543,10 @@ namespace mars
 
         void EnvireMarsGraphics::createJoint(const std::string &jointName, envire::core::FrameId frameId)
         {
-            envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
-            Vector p = t.transform.translation;
+            const envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+            const Vector p = t.transform.translation;
 
+            // TODO: Use named constants instead of magic numbers
             ConfigMap config, material;
             config["origname"] = "sphere";
             config["filename"] = "PRIMITIVE";
@@ -560,7 +566,7 @@ namespace mars
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
             nodeData.material.fromConfigMap(&material, "");
-            unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
+            const unsigned long drawID = graphics->addDrawObject(nodeData, showAnchor);
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, t.transform.orientation);
 
@@ -571,20 +577,17 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                envire::core::EnvireGraph::ItemIterator<envire::core::Item<interfaces::AbsolutePose>> it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
+                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 anchorMap[drawID] = &(it->getData());
             }
         }
 
-        void EnvireMarsGraphics::produceData(const data_broker::DataInfo &info,
-                                             data_broker::DataPackage *dbPackage,
-                                             int callbackParam)
+        void EnvireMarsGraphics::produceData(const data_broker::DataInfo &info, data_broker::DataPackage *dbPackage, int callbackParam)
         {
             dbPackageMapping.writePackage(dbPackage);
         }
 
     } // end of namespace envire_mars_graphics
-
 } // end of namespace mars
 
 DESTROY_LIB(mars::envire_mars_graphics::EnvireMarsGraphics);

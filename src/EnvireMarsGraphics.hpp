@@ -6,22 +6,12 @@
  */
 
 #pragma once
-#include <mars_utils/Vector.h>
 
-#include <cfg_manager/CFGManagerInterface.h>
 #include <envire_core/items/Item.hpp>
 #include <envire_core/graph/EnvireGraph.hpp>
 #include <envire_core/graph/TreeView.hpp>
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
-#include <mars_interfaces/graphics/GraphicsManagerInterface.h>
-#include <mars_interfaces/sim/DynamicObject.hpp>
-
-#include <data_broker/ProducerInterface.h>
-#include <data_broker/DataBrokerInterface.h>
-#include <data_broker/DataPackageMapping.h>
-
-#include <iostream>
 
 #include <envire_base_types/Link.hpp>
 #include <envire_base_types/Inertial.hpp>
@@ -34,7 +24,15 @@
 #include <envire_base_types/joints/Revolute.hpp>
 #include <envire_base_types/joints/Continuous.hpp>
 
+#include <cfg_manager/CFGManagerInterface.h>
+#include <data_broker/ProducerInterface.h>
+#include <data_broker/DataBrokerInterface.h>
+#include <data_broker/DataPackageMapping.h>
+
+#include <mars_utils/Vector.h>
+#include <mars_interfaces/graphics/GraphicsManagerInterface.h>
 #include <mars_interfaces/sim/AbsolutePose.hpp>
+
 
 namespace mars
 {
@@ -73,7 +71,7 @@ namespace mars
 
             const std::string getLibName() const override
             {
-                return std::string("envire_mars_graphics");
+                return std::string{"envire_mars_graphics"};
             }
 
             CREATE_MODULE_INFO();
@@ -107,9 +105,12 @@ namespace mars
         private:
             std::shared_ptr<envire::core::EnvireGraph> envireGraph;
             std::shared_ptr<envire::core::TreeView> graphTreeView;
+
+            // library references
             data_broker::DataBrokerInterface *dataBroker;
             interfaces::GraphicsManagerInterface *graphics;
             cfg_manager::CFGManagerInterface *cfg;
+
             data_broker::DataPackageMapping dbPackageMapping;
             std::map<unsigned long, interfaces::AbsolutePose*> visualMap, collisionMap, frameMap, anchorMap;
             //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
@@ -119,5 +120,5 @@ namespace mars
             int avgTimeCount;
         };
 
-    } // end of namespace envire_ode_physics_viz
+    } // end of namespace envire_mars_graphics
 } // end of namespace mars
