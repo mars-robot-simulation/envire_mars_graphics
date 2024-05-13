@@ -149,8 +149,8 @@ namespace mars
                 {
                     if (it.second)
                     {
-                        graphics->setDrawObjectPos(it.first, it.second->position);
-                        graphics->setDrawObjectRot(it.first, it.second->rotation);
+                        graphics->setDrawObjectPos(it.first, it.second->getPosition());
+                        graphics->setDrawObjectRot(it.first, it.second->getRotation());
                     }
                 }
             }
@@ -166,8 +166,8 @@ namespace mars
                 {
                     if (it.second)
                     {
-                        graphics->setDrawObjectPos(it.first, it.second->position);
-                        graphics->setDrawObjectRot(it.first, it.second->rotation);
+                        graphics->setDrawObjectPos(it.first, it.second->getPosition());
+                        graphics->setDrawObjectRot(it.first, it.second->getRotation());
                     }
                 }
             }
@@ -184,8 +184,8 @@ namespace mars
             {
                 if (it.second)
                 {
-                    graphics->setDrawObjectPos(it.first, it.second->position);
-                    graphics->setDrawObjectRot(it.first, it.second->rotation);
+                    graphics->setDrawObjectPos(it.first, it.second->getPosition());
+                    graphics->setDrawObjectRot(it.first, it.second->getRotation());
                 }
             }
             if(dataBroker)
@@ -200,7 +200,7 @@ namespace mars
                 {
                     if (it.second)
                     {
-                        graphics->setDrawObjectPos(it.first, it.second->position);
+                        graphics->setDrawObjectPos(it.first, it.second->getPosition());
                     }
                 }
             }
