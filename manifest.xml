@@ -11,6 +11,6 @@
     <depend package="simulation/mars2/mars_graphics" />
     <depend package="simulation/mars2/mars_interfaces" />
     <depend package="envire/envire_core" />
-    <depend package="envire/envire_base_types" />
+    <depend package="envire/envire_types" />
     <tags>needs_opt</tags>
 </package>

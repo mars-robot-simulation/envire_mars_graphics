@@ -103,16 +103,16 @@ namespace mars
             // TODO: parse the graph and search for frames, etc.
 
             //GraphEventDispatcher::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Box>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Capsule>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Cylinder>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Mesh>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Sphere>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>::subscribe(envireGraph.get());
         }
 
         EnvireMarsGraphics::~EnvireMarsGraphics()
@@ -251,7 +251,7 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Link>>& e)
         {
             const auto& transform = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
             if(graphics)
@@ -282,11 +282,11 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Inertial>>& e)
         {
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Box>>& e)
         {
             if (!graphics)
             {
@@ -314,7 +314,7 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Capsule>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Capsule>>& e)
         {
             if(!graphics)
             {
@@ -341,7 +341,7 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Cylinder>>& e)
         {
             if(!graphics)
             {
@@ -368,7 +368,7 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Mesh>>& e)
         {
             if(!graphics)
             {
@@ -395,7 +395,7 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Sphere>>& e)
         {
             if(!graphics)
             {
@@ -513,7 +513,7 @@ namespace mars
         }
 
         // TODO: Use template method
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Fixed>>& e)
         {
             if(graphics)
             {
@@ -523,7 +523,7 @@ namespace mars
         }
 
         // TODO: Use template method
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Revolute>>& e)
         {
             if(graphics)
             {
@@ -533,7 +533,7 @@ namespace mars
         }
 
         // TODO: Use template method
-        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Continuous>>& e)
         {
             if(graphics)
             {

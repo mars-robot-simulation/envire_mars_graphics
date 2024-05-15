@@ -33,7 +33,7 @@ pkg_check_modules(PKGCONFIG REQUIRED
     configmaps
     data_broker
     envire_core
-    envire_base_types
+    envire_types
 )
 
 include_directories(${PKGCONFIG_INCLUDE_DIRS})

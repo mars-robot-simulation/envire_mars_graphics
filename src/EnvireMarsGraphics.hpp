@@ -13,16 +13,16 @@
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
 
-#include <envire_base_types/Link.hpp>
-#include <envire_base_types/Inertial.hpp>
-#include <envire_base_types/geometry/Box.hpp>
-#include <envire_base_types/geometry/Capsule.hpp>
-#include <envire_base_types/geometry/Cylinder.hpp>
-#include <envire_base_types/geometry/Mesh.hpp>
-#include <envire_base_types/geometry/Sphere.hpp>
-#include <envire_base_types/joints/Fixed.hpp>
-#include <envire_base_types/joints/Revolute.hpp>
-#include <envire_base_types/joints/Continuous.hpp>
+#include <envire_types/Link.hpp>
+#include <envire_types/Inertial.hpp>
+#include <envire_types/geometry/Box.hpp>
+#include <envire_types/geometry/Capsule.hpp>
+#include <envire_types/geometry/Cylinder.hpp>
+#include <envire_types/geometry/Mesh.hpp>
+#include <envire_types/geometry/Sphere.hpp>
+#include <envire_types/joints/Fixed.hpp>
+#include <envire_types/joints/Revolute.hpp>
+#include <envire_types/joints/Continuous.hpp>
 
 #include <cfg_manager/CFGManagerInterface.h>
 #include <data_broker/ProducerInterface.h>
@@ -42,16 +42,16 @@ namespace mars
                                    public interfaces::GraphicsUpdateInterface,
                                    public cfg_manager::CFGClient,
                                    public data_broker::ProducerInterface,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Box>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Capsule>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Cylinder>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Mesh>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::geometry::Sphere>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>,
-                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Box>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Capsule>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Cylinder>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Mesh>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Sphere>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>
         {
 
         public:
@@ -87,16 +87,16 @@ namespace mars
                                      int callbackParam) override;
 
             // envire callbacks
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Box>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Capsule>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Cylinder>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Mesh>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::geometry::Sphere>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Link>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Box>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Capsule>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Cylinder>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Mesh>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Sphere>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Fixed>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Revolute>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Continuous>>& e) override;
 
             void createVisual(configmaps::ConfigMap &node, envire::core::FrameId frameId);
             void createCollision(configmaps::ConfigMap &config, envire::core::FrameId frameId);
