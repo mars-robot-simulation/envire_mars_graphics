@@ -27,7 +27,7 @@
 
 
 typedef envire::core::GraphTraits::vertex_descriptor VertexDesc;
-
+using namespace configmaps;
 namespace mars
 {
     namespace envire_mars_graphics
