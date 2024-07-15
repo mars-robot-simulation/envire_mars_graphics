@@ -15,6 +15,8 @@
 
 #include <envire_types/Link.hpp>
 #include <envire_types/Inertial.hpp>
+#include <envire_types/geometry/Heightfield.hpp>
+#include <envire_types/geometry/Plane.hpp>
 #include <envire_types/geometry/Box.hpp>
 #include <envire_types/geometry/Capsule.hpp>
 #include <envire_types/geometry/Cylinder.hpp>
@@ -44,6 +46,8 @@ namespace mars
                                    public data_broker::ProducerInterface,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Heightfield>>,
+                                   public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Plane>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Box>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Capsule>>,
                                    public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Cylinder>>,
@@ -89,6 +93,8 @@ namespace mars
             // envire callbacks
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Link>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Heightfield>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Plane>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Box>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Capsule>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Cylinder>>& e) override;

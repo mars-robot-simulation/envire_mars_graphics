@@ -25,7 +25,6 @@
 #include <mars_interfaces/Logging.hpp>
 #include <mars_interfaces/MARSDefs.h>
 
-
 typedef envire::core::GraphTraits::vertex_descriptor VertexDesc;
 using namespace configmaps;
 namespace mars
@@ -105,6 +104,8 @@ namespace mars
             //GraphEventDispatcher::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Heightfield>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Plane>>::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Box>>::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Capsule>>::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Cylinder>>::subscribe(envireGraph.get());
@@ -286,6 +287,55 @@ namespace mars
         {
         }
 
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Heightfield>>& e)
+        {
+            if (!graphics)
+            {
+                return;
+            }
+
+            auto& geometry = e.item->getData();
+            auto config = geometry.getFullConfigMap();
+
+            if (e.item->getTag() == "visual")
+            {
+                LOG_INFO("VISUAL Heightfield: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Heightfield: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
+            }
+        }
+
+        void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Plane>>& e)
+        {
+            if (!graphics)
+            {
+                return;
+            }
+
+            auto& geometry = e.item->getData();
+            auto config = geometry.getFullConfigMap();
+
+            config["origname"] = config["type"];
+            config["filename"] = "PRIMITIVE";
+            config["extend"]["x"] = config["size"]["x"];
+            config["extend"]["y"] = config["size"]["y"];
+
+            if (e.item->getTag() == "visual")
+            {
+                LOG_INFO("VISUAL Box: add: %s", e.frame.c_str());
+                createVisual(config, e.frame);
+            } else if (e.item->getTag() == "collision")
+            {
+                LOG_INFO("COLLISION Box: add: %s", e.frame.c_str());
+                config["physicmode"] = config["type"];
+                createCollision(config, e.frame);
+            }
+        }
+
         void EnvireMarsGraphics::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::geometry::Box>>& e)
         {
             if (!graphics)
@@ -424,6 +474,7 @@ namespace mars
         void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &config, envire::core::FrameId frameId) {
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
+
             // TODO: do we want to set default material in smurf if we dont have one
             ConfigMap material;
             if (config.hasKey("material"))
