@@ -118,7 +118,10 @@ namespace mars
             cfg_manager::CFGManagerInterface *cfg;
 
             data_broker::DataPackageMapping dbPackageMapping;
-            std::map<unsigned long, interfaces::AbsolutePose*> visualMap, collisionMap, frameMap, anchorMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> visualMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> collisionMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> frameMap;
+            std::map<unsigned long, interfaces::AbsolutePose*> anchorMap;
             //std::map<unsigned long, std::pair<envire::core::FrameId, Eigen::Affine3d>> visualAnchorMap;
             cfg_manager::cfgPropertyStruct cfgVisRep;
             bool showGui, showCollisions, showAnchor;

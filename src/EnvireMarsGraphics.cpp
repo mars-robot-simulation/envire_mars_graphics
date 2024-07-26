@@ -266,6 +266,7 @@ namespace mars
                 config["createFrame"] = true;
                 interfaces::NodeData nodeData;
                 nodeData.fromConfigMap(&config, "");
+                nodeData.name += "_frame";
                 const auto& drawID = graphics->addDrawObject(nodeData, 0);
                 graphics->setDrawObjectPos(drawID, transform.transform.translation);
                 graphics->setDrawObjectRot(drawID, transform.transform.orientation);
@@ -301,7 +302,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Heightfield: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Heightfield: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -328,7 +330,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Box: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Box: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -356,7 +359,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Box: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Box: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -383,7 +387,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Capsule: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Capsule: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -410,7 +415,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Cylinder: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Cylinder: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -437,7 +443,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Mesh: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Mesh: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -463,7 +470,8 @@ namespace mars
             {
                 LOG_INFO("VISUAL Sphere: add: %s", e.frame.c_str());
                 createVisual(config, e.frame);
-            } else if (e.item->getTag() == "collision")
+            }
+            else if (e.item->getTag() == "collision")
             {
                 LOG_INFO("COLLISION Sphere: add: %s", e.frame.c_str());
                 config["physicmode"] = config["type"];
@@ -471,7 +479,8 @@ namespace mars
             }
         }
 
-        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &config, envire::core::FrameId frameId) {
+        void EnvireMarsGraphics::createVisual(configmaps::ConfigMap &config, envire::core::FrameId frameId)
+        {
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
 
@@ -480,7 +489,8 @@ namespace mars
             if (config.hasKey("material"))
             {
                 material = config["material"];
-            } else
+            }
+            else
             {
                 // TODO: Use named colors instead of magic numbers
                 material["name"] = "visual";
@@ -499,6 +509,7 @@ namespace mars
             }
             nodeData.material.fromConfigMap(&material, "");
 
+            nodeData.name += "_visual";
             const auto& drawID = graphics->addDrawObject(nodeData, showGui);
             const auto& transform = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             const auto& p = transform.transform.translation;
@@ -513,7 +524,7 @@ namespace mars
                 // CAUTION: we assume that there is only one AbsolutePose in the frame
                 // so we get the first item
                 // TODO: add handling/warning if there is multiple AbsolutePose for some reason
-                const auto& it{envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId)};
+                const auto& it = envireGraph->getItem<envire::core::Item<interfaces::AbsolutePose>>(frameId);
                 visualMap[drawID] = &(it->getData());
             }
         }
@@ -544,6 +555,7 @@ namespace mars
 
             nodeData.material.fromConfigMap(&material, "");
 
+            nodeData.name += "_collision";
             const auto& drawID = graphics->addDrawObject(nodeData, showCollisions);
             const auto& transform = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             const auto& p = transform.transform.translation;
@@ -618,6 +630,7 @@ namespace mars
             interfaces::NodeData nodeData;
             nodeData.fromConfigMap(&config, "");
             nodeData.material.fromConfigMap(&material, "");
+            nodeData.name += "_anchor";
             const auto& drawID = graphics->addDrawObject(nodeData, showAnchor);
             graphics->setDrawObjectPos(drawID, p);
             graphics->setDrawObjectRot(drawID, transform.transform.orientation);
