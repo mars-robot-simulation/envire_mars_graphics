@@ -581,7 +581,7 @@ namespace mars
             if(graphics)
             {
                 const auto& joint = e.item->getData();
-                createJoint(joint.name, e.frame);
+                createJoint(joint.getName(), e.frame);
             }
         }
 
@@ -591,7 +591,7 @@ namespace mars
             if(graphics)
             {
                 const auto& joint = e.item->getData();
-                createJoint(joint.name, e.frame);
+                createJoint(joint.getName(), e.frame);
             }
         }
 
@@ -601,7 +601,7 @@ namespace mars
             if(graphics)
             {
                 const auto& joint = e.item->getData();
-                createJoint(joint.name, e.frame);
+                createJoint(joint.getName(), e.frame);
             }
         }
 
