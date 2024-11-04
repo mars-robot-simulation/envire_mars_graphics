@@ -54,6 +54,7 @@ namespace mars
 
         void EnvireMarsGraphics::init(void)
         {
+            libManager->acquireLibrary("mars_core");
             showGui = true;
             showCollisions = false;
             showAnchor = false;
@@ -118,6 +119,21 @@ namespace mars
 
         EnvireMarsGraphics::~EnvireMarsGraphics()
         {
+            // unsubscribe from envire graph
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Heightfield>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Plane>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Box>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Capsule>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Cylinder>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Mesh>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::geometry::Sphere>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>::unsubscribe();
+
+            libManager->releaseLibrary("mars_core");
             if(graphics)
             {
                 libManager->releaseLibrary("mars_graphics");
