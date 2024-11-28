@@ -24,6 +24,7 @@
 
 #include <mars_interfaces/Logging.hpp>
 #include <mars_interfaces/MARSDefs.h>
+#include <mars_interfaces/terrainStruct.h>
 
 typedef envire::core::GraphTraits::vertex_descriptor VertexDesc;
 using namespace configmaps;
@@ -525,6 +526,20 @@ namespace mars
             }
             nodeData.material.fromConfigMap(&material, "");
 
+            // check if we have to load additional data:
+            if(nodeData.terrain)
+            {
+                if(!nodeData.terrain->pixelData)
+                {
+                    LOG_INFO("Load heightmap pixelData...");
+                    ControlCenter::loadCenter->loadHeightmap->readPixelData(nodeData.terrain);
+                    if(!nodeData.terrain->pixelData)
+                    {
+                        LOG_ERROR("EnvireMarsGraphics::addNode: could not load image for terrain");
+                    }
+                }
+            }
+
             nodeData.name += "_visual";
             const auto& drawID = graphics->addDrawObject(nodeData, showGui);
             const auto& transform = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
@@ -572,6 +587,21 @@ namespace mars
             nodeData.material.fromConfigMap(&material, "");
 
             nodeData.name += "_collision";
+
+            // check if we have to load additional data:
+            if(nodeData.terrain)
+            {
+                if(!nodeData.terrain->pixelData)
+                {
+                    LOG_INFO("Load heightmap pixelData...");
+                    ControlCenter::loadCenter->loadHeightmap->readPixelData(nodeData.terrain);
+                    if(!nodeData.terrain->pixelData)
+                    {
+                        LOG_ERROR("EnvireMarsGraphics::addNode: could not load image for terrain");
+                    }
+                }
+            }
+
             const auto& drawID = graphics->addDrawObject(nodeData, showCollisions);
             const auto& transform = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
             const auto& p = transform.transform.translation;
