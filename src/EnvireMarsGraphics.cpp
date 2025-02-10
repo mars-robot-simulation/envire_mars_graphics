@@ -531,12 +531,12 @@ namespace mars
             {
                 if(!nodeData.terrain->pixelData)
                 {
-                    LOG_INFO("Load heightmap pixelData...");
                     if(config.hasKey("filePrefix"))
                     {
                         std::string path = config["filePrefix"];
                         nodeData.terrain->srcname = utils::pathJoin(path, nodeData.terrain->srcname);
                     }
+                    LOG_INFO("Load heightmap pixelData... from %s", nodeData.terrain->srcname.c_str());
                     ControlCenter::loadCenter->loadHeightmap->readPixelData(nodeData.terrain);
                     if(!nodeData.terrain->pixelData)
                     {
@@ -598,7 +598,12 @@ namespace mars
             {
                 if(!nodeData.terrain->pixelData)
                 {
-                    LOG_INFO("Load heightmap pixelData...");
+                    if(config.hasKey("filePrefix"))
+                    {
+                        std::string path = config["filePrefix"];
+                        nodeData.terrain->srcname = utils::pathJoin(path, nodeData.terrain->srcname);
+                    }
+                    LOG_INFO("Load heightmap pixelData... from %s", nodeData.terrain->srcname.c_str());
                     ControlCenter::loadCenter->loadHeightmap->readPixelData(nodeData.terrain);
                     if(!nodeData.terrain->pixelData)
                     {
