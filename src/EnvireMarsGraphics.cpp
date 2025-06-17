@@ -524,6 +524,10 @@ namespace mars
                 material["ambientColor"]["g"] = 0.59;
                 material["ambientColor"]["b"] = 0.5;
             }
+            if(config.hasKey("filePrefix"))
+            {
+                material["loadPath"] = config["filePrefix"];
+            }
             nodeData.material.fromConfigMap(&material, "");
 
             // check if we have to load additional data:
