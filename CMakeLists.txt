@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(envire_mars_graphics VERSION 1.0.0 DESCRIPTION "Visualization of envire types via mars_graphics.")
 
 find_package(Rock)
